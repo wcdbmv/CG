@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QVector>
 #include <QTableWidgetItem>
+#include <QLineEdit>
 #include <QPainter>
 #include "geometry.h"
 
@@ -25,14 +26,18 @@ private slots:
 	void on_addPointPushButton_clicked();
 	void on_deletePointPushButton_clicked();
 	void on_calculatePushButton_clicked();
+	void on_clearPushButton_clicked();
 
 	void tableWidgetItem_changed(QTableWidgetItem *item);
 
-	void on_clearPushButton_clicked();
-
 private:
+	bool get_var(double &var, const QLineEdit *lineEdit, const QString &err_msg);
+
+	double x_coord(double x) const;
+	double y_coord(double y) const;
 	QPointF coord(const Point &point) const;
 	void drawLine(const Line &line, QPainter &painter);
+	QPen choosePen(int i) const;
 
 private:
 	Ui::MainWindow *ui;

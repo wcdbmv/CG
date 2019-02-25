@@ -2,9 +2,9 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , j_max(0)
+	: QMainWindow(parent)
+	, ui(new Ui::MainWindow)
+	, j_max(0)
 {
 	ui->setupUi(this);
 
@@ -17,19 +17,22 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
-void MainWindow::on_addPointPushButton_clicked()
+bool MainWindow::get_var(double &var, const QLineEdit *lineEdit, const QString &err_msg)
 {
 	bool ok;
-	double x = ui->xLineEdit->text().toDouble(&ok);
-	if (!ok) {
-		ui->statusBar->showMessage("Invalid x", STATUS_BAR_TIMEOUT);
+	var = lineEdit->text().toDouble(&ok);
+	if (!ok)
+		ui->statusBar->showMessage(err_msg, STATUS_BAR_TIMEOUT);
+	return ok;
+}
+
+void MainWindow::on_addPointPushButton_clicked()
+{
+	double x, y;
+	if (!(get_var(x, ui->xLineEdit, "Invalid x")
+	   && get_var(y, ui->yLineEdit, "Invalid y")))
 		return;
-	}
-	double y = ui->yLineEdit->text().toDouble(&ok);
-	if (!ok) {
-		ui->statusBar->showMessage("Invalid y", STATUS_BAR_TIMEOUT);
-		return;
-	}
+
 	Point point(x, y);
 	if (points.contains(point)) {
 		ui->statusBar->showMessage("Point already exists", STATUS_BAR_TIMEOUT);
@@ -126,7 +129,12 @@ void MainWindow::on_calculatePushButton_clicked()
 		ui->statusBar->showMessage("No one triangle can be drawn", STATUS_BAR_TIMEOUT);
 	}
 
-	ui->statusBar->showMessage("Triangle found successful", STATUS_BAR_TIMEOUT);
+	ui->statusBar->showMessage(
+		"Triangle found successful on points "
+	  + QString::number(i_max + 1) + ", "
+	  + QString::number(j_max + 1) + " and "
+	  + QString::number(k_max + 1), STATUS_BAR_TIMEOUT
+	);
 	update();
 }
 
@@ -141,22 +149,37 @@ void MainWindow::on_clearPushButton_clicked()
 	update();
 }
 
+double MainWindow::x_coord(double x) const
+{
+	return PAINT_WIDTH / 2 + x * scale_factor;
+}
+
+double MainWindow::y_coord(double y) const
+{
+	return PAINT_HEIGHT / 2 - y * scale_factor;
+}
+
 QPointF MainWindow::coord(const Point &point) const
 {
-	return QPointF(PAINT_WIDTH / 2 + point.x * scale_factor, PAINT_HEIGHT / 2 - point.y * scale_factor);
+	return QPointF(x_coord(point.x), y_coord(point.y));
+}
+
+QPen MainWindow::choosePen(int i) const
+{
+	if (i % 50 == 0)
+		return QPen(Qt::black);
+	if (i % 10 == 0)
+		return QPen(Qt::darkGray);
+	if (i % 5 == 0)
+		return QPen(Qt::gray);
+	return QPen(Qt::lightGray);
 }
 
 void MainWindow::paintEvent(QPaintEvent */*event*/)
 {
 	QPainter painter(this);
 	painter.translate(230, 0);
-
-	// draw axes
-	painter.fillRect(0, 0, PAINT_WIDTH, PAINT_HEIGHT, QBrush(Qt::white));
-	painter.drawLine(0, PAINT_HEIGHT / 2, PAINT_WIDTH, PAINT_HEIGHT / 2);
-	painter.drawLine(PAINT_WIDTH / 2, 0, PAINT_WIDTH / 2, PAINT_HEIGHT);
-	painter.drawPolyline(QPolygon() << QPoint(PAINT_WIDTH / 2 - 2, 10) << QPoint(PAINT_WIDTH / 2, 0) << QPoint(PAINT_WIDTH / 2 + 2, 10));
-	painter.drawPolyline(QPolygon() << QPoint(PAINT_WIDTH - 10, PAINT_HEIGHT / 2 - 2) << QPoint(PAINT_WIDTH, PAINT_HEIGHT / 2) << QPoint(PAINT_WIDTH - 10, PAINT_HEIGHT / 2 + 2));
+	painter.fillRect(0, 0, PAINT_WIDTH, PAINT_HEIGHT, Qt::white);
 
 	if (!j_max)
 		return;
@@ -167,6 +190,18 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 	double scale_x = 9.0 * PAINT_WIDTH / (20.0 * x_max);
 	double scale_y = 9.0 * PAINT_HEIGHT / (20.0 * y_max);
 	scale_factor = qMin(scale_x, scale_y);
+
+	// draw grid
+	int m = PAINT_HEIGHT / (2 * scale_factor);
+	for (int i = -m; i != m + 1; ++i) {
+		painter.setPen(choosePen(i));
+		painter.drawLine(QPointF(0, y_coord(i)), QPointF(PAINT_WIDTH, y_coord(i)));
+	}
+	m = PAINT_WIDTH / (2 * scale_factor);
+	for (int i = -m; i != m + 1; ++i) {
+		painter.setPen(choosePen(i));
+		painter.drawLine(QPointF(x_coord(i), 0), QPointF(x_coord(i), PAINT_HEIGHT));
+	}
 
 	// draw points
 	painter.setPen(Qt::red);
@@ -189,21 +224,21 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 	};
 
 	const QVector<Line> sides = {
-	    Line(points[j_max], points[k_max]),
-	    Line(points[k_max], points[i_max]),
-	    Line(points[i_max], points[j_max])
+		Line(points[j_max], points[k_max]),
+		Line(points[k_max], points[i_max]),
+		Line(points[i_max], points[j_max])
 	};
 
 	const QVector<Line> altitudes = {
-	    sides[0].perpendicular(points[i_max]),
-	    sides[1].perpendicular(points[j_max]),
-	    sides[2].perpendicular(points[k_max])
+		sides[0].perpendicular(points[i_max]),
+		sides[1].perpendicular(points[j_max]),
+		sides[2].perpendicular(points[k_max])
 	};
 
 	const QVector<Point> Hs = {
-	    intersection(altitudes[0], sides[0]),
-	    intersection(altitudes[1], sides[1]),
-	    intersection(altitudes[2], sides[2])
+		intersection(altitudes[0], sides[0]),
+		intersection(altitudes[1], sides[1]),
+		intersection(altitudes[2], sides[2])
 	};
 
 	painter.setPen(QPen(Qt::blue, 2));
@@ -214,7 +249,7 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 		for (int i = 0; i != 3; ++i)
 			painter.drawLine(coord(Hs[i]), coord(orthocenter_max));
 
-		painter.setPen(QPen(Qt::lightGray, 1));
+		painter.setPen(QPen(Qt::green, 1));
 		for (int i = 0; i != 3; ++i) {
 			const Point &A = points[indices[(i + 1) % 3]];
 			const Point &B = points[indices[(i + 2) % 3]];
@@ -251,10 +286,10 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 void MainWindow::drawLine(const Line &line, QPainter &painter)
 {
 	const QVector<Line> borders = {
-	    Line(0, 1, - PAINT_HEIGHT / (2 * scale_factor)),
-	    Line(1, 0, - PAINT_WIDTH / (2 * scale_factor)),
-	    Line(0, 1, PAINT_HEIGHT / (2 * scale_factor)),
-	    Line(1, 0, PAINT_WIDTH / (2 * scale_factor))
+		Line(0, 1, - PAINT_HEIGHT / (2 * scale_factor)),
+		Line(1, 0, - PAINT_WIDTH / (2 * scale_factor)),
+		Line(0, 1, PAINT_HEIGHT / (2 * scale_factor)),
+		Line(1, 0, PAINT_WIDTH / (2 * scale_factor))
 	};
 	QVector<Point> borders_borders;
 	foreach (const Line &border, borders) {
