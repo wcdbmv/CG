@@ -147,9 +147,8 @@ void MainWindow::paintEvent(QPaintEvent *)
 	painter.fillRect(0, 0, PAINT_WIDTH, PAINT_HEIGHT, QBrush(Qt::white));
 
 	Transform transform;
-	foreach (const Transform &cur, transforms) {
-		transform.combine(cur);
-	}
+	for (int i = transforms.size() - 1; i >= 0; --i)
+		transform.combine(transforms[i]);
 
 	compress = 1;
 
@@ -172,8 +171,10 @@ void MainWindow::paintEvent(QPaintEvent *)
 	if (paint_max.x > paint_size.x || paint_max.y > paint_size.y) {
 		compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
 	}
-	else if (paint_max.x < paint_min.x && paint_max.y < paint_min.y) {
-		compress /= 1.1 * qMax(paint_min.x / paint_max.x, paint_min.y / paint_max.y);
+	else if (paint_max.x < paint_min.x || paint_max.y < paint_min.y) {
+		compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
+		if (compress == 0)
+			compress = 1e-12;
 	}
 
 	QVector<QPointF> rhomb(4);

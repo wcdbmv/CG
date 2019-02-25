@@ -43,6 +43,7 @@ private:
 	static const int PAINT_HEIGHT = 991;
 	static const int PAINT_WIDTH = 1690;
 	static const int NORMAL_SCALE_FACTOR = 35;
+	static const int COMPRESS_MIN = (2.0 * NORMAL_SCALE_FACTOR) / PAINT_HEIGHT;
 	double compress = 1;
 
 	double a = 2.5;
