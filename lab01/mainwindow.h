@@ -46,6 +46,7 @@ private:
 	int i_max, j_max, k_max;
 	double angle_max;
 	Point orthocenter_max;
+	double x_max, y_max, x_min, y_min;
 	double scale_factor;
 
 	static const int STATUS_BAR_TIMEOUT = 5000;

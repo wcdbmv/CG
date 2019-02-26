@@ -131,9 +131,10 @@ void MainWindow::on_calculatePushButton_clicked()
 
 	ui->statusBar->showMessage(
 		"Triangle found successful on points "
-	  + QString::number(i_max + 1) + ", "
-	  + QString::number(j_max + 1) + " and "
-	  + QString::number(k_max + 1), STATUS_BAR_TIMEOUT
+		+ QString::number(i_max + 1) + ", "
+		+ QString::number(j_max + 1) + " and "
+		+ QString::number(k_max + 1) + ". Angle: "
+		+ QString::number(angle_max * 180 / 3.1415926)
 	);
 	update();
 }
@@ -151,12 +152,12 @@ void MainWindow::on_clearPushButton_clicked()
 
 double MainWindow::x_coord(double x) const
 {
-	return PAINT_WIDTH / 2 + x * scale_factor;
+	return PAINT_WIDTH / 2 + (x - x_min - 0.5 * (x_max - x_min)) * scale_factor;
 }
 
 double MainWindow::y_coord(double y) const
 {
-	return PAINT_HEIGHT / 2 - y * scale_factor;
+	return PAINT_HEIGHT / 2 - (y - y_min - 0.5 * (y_max - y_min)) * scale_factor;
 }
 
 QPointF MainWindow::coord(const Point &point) const
@@ -175,7 +176,7 @@ QPen MainWindow::choosePen(int i) const
 	return QPen(Qt::lightGray);
 }
 
-void MainWindow::paintEvent(QPaintEvent */*event*/)
+void MainWindow::paintEvent(QPaintEvent *)
 {
 	QPainter painter(this);
 	painter.translate(230, 0);
@@ -185,29 +186,24 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 		return;
 
 	// find scale factor
-	double x_max = qMax(qMax(qAbs(points[i_max].x), qAbs(points[j_max].x)), qMax(qAbs(points[k_max].x), qAbs(orthocenter_max.x)));
-	double y_max = qMax(qMax(qAbs(points[i_max].y), qAbs(points[j_max].y)), qMax(qAbs(points[k_max].y), qAbs(orthocenter_max.y)));
-	double scale_x = 9.0 * PAINT_WIDTH / (20.0 * x_max);
-	double scale_y = 9.0 * PAINT_HEIGHT / (20.0 * y_max);
+	x_max = qMax(qMax(points[i_max].x, points[j_max].x), qMax(points[k_max].x, orthocenter_max.x));
+	y_max = qMax(qMax(points[i_max].y, points[j_max].y), qMax(points[k_max].y, orthocenter_max.y));
+	x_min = qMin(qMin(points[i_max].x, points[j_max].x), qMin(points[k_max].x, orthocenter_max.x));
+	y_min = qMin(qMin(points[i_max].y, points[j_max].y), qMin(points[k_max].y, orthocenter_max.y));
+	double scale_x = 0.9 * PAINT_WIDTH / (x_max - x_min);
+	double scale_y = 0.9 * PAINT_HEIGHT / (y_max - y_min);
 	scale_factor = qMin(scale_x, scale_y);
-
-	// draw grid
-	int m = PAINT_HEIGHT / (2 * scale_factor);
-	for (int i = -m; i != m + 1; ++i) {
-		painter.setPen(choosePen(i));
-		painter.drawLine(QPointF(0, y_coord(i)), QPointF(PAINT_WIDTH, y_coord(i)));
-	}
-	m = PAINT_WIDTH / (2 * scale_factor);
-	for (int i = -m; i != m + 1; ++i) {
-		painter.setPen(choosePen(i));
-		painter.drawLine(QPointF(x_coord(i), 0), QPointF(x_coord(i), PAINT_HEIGHT));
-	}
 
 	// draw points
 	painter.setPen(Qt::red);
 	painter.setBrush(Qt::red);
 	foreach (const Point &point, points) {
-		painter.drawEllipse(coord(point), 4, 4);
+		double x = x_coord(point.x);
+		double y = y_coord(point.y);
+		if (0 <= x && x <= PAINT_WIDTH
+		 && 0 <= y && y <= PAINT_HEIGHT) {
+			painter.drawEllipse(x, y, 4, 4);
+		}
 	}
 
 	// draw triangle
@@ -218,9 +214,9 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 	Triangle triangle(points[i_max], points[j_max], points[k_max]);
 
 	const QVector<int> indices = {
-	    i_max,
-	    j_max,
-	    k_max
+		i_max,
+		j_max,
+		k_max
 	};
 
 	const QVector<Line> sides = {
@@ -267,38 +263,59 @@ void MainWindow::paintEvent(QPaintEvent */*event*/)
 
 	painter.setPen(QPen(Qt::gray, 1));
 	painter.setBrush(Qt::gray);
-	if (orthocenter_max != Point())
-		drawLine(Line(Point(), orthocenter_max), painter);
-	// painter.drawLine(coord(Point()), coord(orthocenter_max));
-	double startAngle, spanAngle;
-	if (orthocenter_max.x >= 0 && orthocenter_max.y >= 0
-	 || orthocenter_max.x <= 0 && orthocenter_max.y <= 0) {
-		spanAngle = degrees(angle_max) * 16;
-		startAngle = 90 * 16 - spanAngle;
+
+	const Point origin;
+	if (orthocenter_max != origin)
+		drawLine(Line(origin, orthocenter_max), painter);
+	const double x0 = x_coord(0);
+	const double y0 = y_coord(0);
+	if (0 <= x0 && x0 <= PAINT_WIDTH)
+		painter.drawLine(x0, 0, x0, PAINT_HEIGHT);
+	if (0 <= x0 && x0 <= PAINT_WIDTH
+	 && 0 <= y0 && y0 <= PAINT_HEIGHT) {
+		double startAngle, spanAngle;
+		if (orthocenter_max.x >= 0 && orthocenter_max.y >= 0
+		 || orthocenter_max.x <= 0 && orthocenter_max.y <= 0) {
+			spanAngle = degrees(angle_max) * 16;
+			startAngle = 90 * 16 - spanAngle;
+		}
+		else {
+			startAngle = 90 * 16;
+			spanAngle = degrees(angle_max) * 16;
+		}
+		painter.drawPie(x0 - 25, y0 - 25, 50, 50, startAngle, spanAngle);
 	}
-	else {
-		startAngle = 90 * 16;
-		spanAngle = degrees(angle_max) * 16;
-	}
-	painter.drawPie(PAINT_WIDTH / 2 - 25, PAINT_HEIGHT / 2 - 25, 50, 50, startAngle, spanAngle);
 }
 
 void MainWindow::drawLine(const Line &line, QPainter &painter)
 {
+	const double dx = x_max - x_min;
+	const double dy = y_max - y_min;
+	const double sx = PAINT_WIDTH / (dx * scale_factor);
+	const double sy = PAINT_HEIGHT / (dy * scale_factor);
+	const double cx = 0.5 * dx;
+	const double cy = 0.5 * dy;
+	const double rx = x_min + cx * (1 + sx);
+	const double ry = y_min + cy * (1 + sy);
+	const double lx = x_min + cx * (1 - sx);
+	const double ly = y_min + cy * (1 - sy);
+
 	const QVector<Line> borders = {
-		Line(0, 1, - PAINT_HEIGHT / (2 * scale_factor)),
-		Line(1, 0, - PAINT_WIDTH / (2 * scale_factor)),
-		Line(0, 1, PAINT_HEIGHT / (2 * scale_factor)),
-		Line(1, 0, PAINT_WIDTH / (2 * scale_factor))
+		Line(Point(lx, ly), Point(lx, ry)),
+		Line(Point(lx, ly), Point(rx, ly)),
+		Line(Point(rx, ry), Point(rx, ly)),
+		Line(Point(rx, ry), Point(lx, ry))
 	};
+
 	QVector<Point> borders_borders;
 	foreach (const Line &border, borders) {
+
 		if (parallel(line, border))
 			continue;
 
 		Point point = intersection(line, border);
-		if ((- PAINT_HEIGHT / (2 * scale_factor) - EPS <= point.y && point.y <= PAINT_HEIGHT / (2 * scale_factor) + EPS)
-		 && (- PAINT_WIDTH / (2 * scale_factor) - EPS <= point.x && point.x <= PAINT_WIDTH / (2 * scale_factor) + EPS)
+		if ((ly - EPS <= point.y && point.y <= ry + EPS)
+		 && (lx - EPS <= point.x && point.x <= rx + EPS)
 		 && !borders_borders.contains(point)) {
 			borders_borders.push_back(point);
 		}
