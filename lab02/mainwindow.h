@@ -29,6 +29,8 @@ private slots:
 
 	bool get_var(double &var, const QLineEdit *lineEdit, const QString &err_msg);
 
+	void on_autoscalingCheckBox_stateChanged(int arg1);
+
 private:
 	void initPoints();
 	double x_coord(double x) const;
@@ -45,6 +47,7 @@ private:
 	static const int NORMAL_SCALE_FACTOR = 35;
 	static const int COMPRESS_MIN = (2.0 * NORMAL_SCALE_FACTOR) / PAINT_HEIGHT;
 	double compress = 1;
+	bool autoscaling = 1;
 
 	double a = 2.5;
 	double b = 1;
@@ -56,6 +59,7 @@ private:
 	int n = 1000;
 	QVector<Point> points;
 	QVector<Transform> transforms;
+
 };
 
 #endif // MAINWINDOW_H

@@ -168,13 +168,15 @@ void MainWindow::paintEvent(QPaintEvent *)
 		paint_max.y = qMax(qAbs(_rhomb[i].y), paint_max.y);
 	}
 
-	if (paint_max.x > paint_size.x || paint_max.y > paint_size.y) {
-		compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
-	}
-	else if (paint_max.x < paint_min.x || paint_max.y < paint_min.y) {
-		compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
-		if (compress == 0)
-			compress = 1e-12;
+	if (autoscaling) {
+		if (paint_max.x > paint_size.x || paint_max.y > paint_size.y) {
+			compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
+		}
+		else if (paint_max.x < paint_min.x && paint_max.y < paint_min.y) {
+			compress *= 1.1 * qMax(paint_max.x / paint_size.x, paint_max.y / paint_size.y);
+			if (compress == 0)
+				compress = 1e-12;
+		}
 	}
 
 	QVector<QPointF> rhomb(4);
@@ -213,4 +215,9 @@ void MainWindow::paintEvent(QPaintEvent *)
 	painter.setBrush(Qt::NoBrush);
 	painter.drawPath(limaconPath);
 	painter.drawPoint(rhomb[0]);
+}
+
+void MainWindow::on_autoscalingCheckBox_stateChanged(int arg1)
+{
+	autoscaling = arg1;
 }
