@@ -49,7 +49,7 @@ private:
 	double x_max, y_max, x_min, y_min;
 	double scale_factor;
 
-	static const int STATUS_BAR_TIMEOUT = 5000;
+	static const int STATUS_BAR_TIMEOUT = 10000;
 	static const int PAINT_WIDTH = 1690;
 	static const int PAINT_HEIGHT = 991;
 };

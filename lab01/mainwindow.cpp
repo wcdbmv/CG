@@ -127,6 +127,7 @@ void MainWindow::on_calculatePushButton_clicked()
 
 	if (!j_max) {
 		ui->statusBar->showMessage("No one triangle can be drawn", STATUS_BAR_TIMEOUT);
+		return;
 	}
 
 	ui->statusBar->showMessage(
@@ -146,6 +147,8 @@ void MainWindow::on_clearPushButton_clicked()
 
 	while (ui->tableWidget->rowCount())
 		ui->tableWidget->removeRow(ui->tableWidget->rowCount() - 1);
+
+	ui->statusBar->showMessage("");
 
 	update();
 }
