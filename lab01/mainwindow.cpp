@@ -205,7 +205,7 @@ void MainWindow::paintEvent(QPaintEvent *)
 		double y = y_coord(point.y);
 		if (0 <= x && x <= PAINT_WIDTH
 		 && 0 <= y && y <= PAINT_HEIGHT) {
-			painter.drawEllipse(x, y, 4, 4);
+			painter.drawEllipse(x - 2, y - 2, 4, 4);
 		}
 	}
 
