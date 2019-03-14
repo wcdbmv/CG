@@ -2,23 +2,23 @@
 #include "ui_mainwindow.h"
 
 #include <QColorDialog>
+#include <QElapsedTimer>
 #include <cmath>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
 	fgColor(defaultFgColor),
-	image(QImage(720, 720, QImage::Format_ARGB32_Premultiplied)),
+	image(QImage(721, 721, QImage::Format_ARGB32)),
 	scene(new QGraphicsScene(0, 0, 720, 720))
 {
 	ui->setupUi(this);
 
-	colorLabel(ui->fgLabel, fgColor);
-
-	image.fill(defaultBgColor);
-
 	ui->graphicsView->setScene(scene);
-	imageLabel();
+	imageView();
+
+	on_clearAllPushButton_clicked();
+	on_setDefaultFGColorPushButton_clicked();
 }
 
 MainWindow::~MainWindow()
@@ -34,14 +34,12 @@ void MainWindow::colorLabel(QLabel *label, QColor &color)
 	label->setPalette(palette);
 }
 
-void MainWindow::imageLabel() {
-	scene->clear();
+void MainWindow::imageView() {
 	scene->addPixmap(QPixmap::fromImage(image));
-	repaint();
 }
 
 template <typename T> int sgn1(T val) {
-	return val >= 0 ? 1 : -1;
+	return (val > 0) - (val < 0);
 }
 
 // Процедура разложения в растр отрезка по методу цифрового дифференциального анализатора (ЦДА)
@@ -108,12 +106,13 @@ void MainWindow::bresenhamFloat(const QLine &line)
 	const int sy = sgn1(dy);
 	dx = qAbs(dx);
 	dy = qAbs(dy);
-	const double m = (double) dy / dx;
 
 	// обмен значений dx и dy в зависимости от углового коэффициента наклона отрезка
 	const bool swapped = dy > dx;
 	if (swapped)
 		qSwap(dx, dy);
+
+	const double m = static_cast<double>(dy) / dx;
 
 	// Инициализация e с поправкой на половину пиксела
 	double e = m - 0.5;
@@ -128,7 +127,7 @@ void MainWindow::bresenhamFloat(const QLine &line)
 				y += sy;
 			--e;
 		}
-		else {
+		if (e < 0) {
 			if (swapped)
 				y += sy;
 			else
@@ -178,7 +177,7 @@ void MainWindow::bresenhamInteger(const QLine &line)
 				y += sy;
 			e -= dx2;
 		}
-		else {
+		if (e < 0) {
 			if (swapped)
 				y += sy;
 			else
@@ -209,15 +208,15 @@ void MainWindow::bresenhamAntialiased(const QLine &line)
 	if (swapped)
 		qSwap(dx, dy);
 
-	double m = static_cast<double>(i_max * dy) / dx;
+	double m = 0;
+	if (dy)
+		m = static_cast<double>(i_max * dy) / dx;
 	double e = i_max / 2.0;
 	double w = i_max - m;
-	double alpha = i_max;
-	QColor color = fgColor;
+	QColor color(fgColor.rgba());
 	for (int i = 0; i != dx; ++i) {
-		color.setAlpha(alpha);
+		color.setAlpha(i_max - e);
 		image.setPixel(x, y, color.rgba());
-		alpha = e;
 		if (e <= w) {
 			if (swapped)
 				y += sy;
@@ -235,7 +234,14 @@ void MainWindow::bresenhamAntialiased(const QLine &line)
 
 void MainWindow::defaultQt(const QLine &line)
 {
+	QPixmap pixmap = QPixmap::fromImage(image);
+	QPainter painter(&pixmap);
+	painter.setPen(fgColor);
 
+	painter.drawLine(line);
+
+	painter.end();
+	image = pixmap.toImage();
 }
 
 static inline int ipart(double x) { return floor(x); }
@@ -245,7 +251,7 @@ static inline double rfpart(double x) { return 1 - fpart(x); }
 void MainWindow::wu(const QLine &line)
 {
 	if (line.p1() == line.p2()) {
-		// image.setPixel(line.p1().x(), line.p1().y(), fgColor.rgb());
+		image.setPixel(line.p1().x(), line.p1().y(), fgColor.rgb());
 		return;
 	}
 
@@ -272,20 +278,21 @@ void MainWindow::wu(const QLine &line)
 	dy = y2 - y1;
 	double grad = dx ? static_cast<double>(dy) / dx : 1;
 
+	QColor color = fgColor;
 	double y = y1;
 	for (int x = x1; x <= x2; ++x) {
-		QColor color = fgColor;
+		const int s = sgn1(y);
 		if (swapped) {
 			color.setAlphaF(rfpart(y));
 			image.setPixel(ipart(y), x, color.rgba());
 			color.setAlphaF(fpart(y));
-			image.setPixel(ipart(y) - 1, x, color.rgba());
+			image.setPixel(ipart(y) + s, x, color.rgba());
 		}
 		else {
 			color.setAlphaF(rfpart(y));
 			image.setPixel(x, ipart(y), color.rgba());
 			color.setAlphaF(fpart(y));
-			image.setPixel(x, ipart(y) - 1, color.rgba());
+			image.setPixel(x, ipart(y) + s, color.rgba());
 		}
 		y += grad;
 	}
@@ -299,16 +306,10 @@ void MainWindow::on_fgPushButton_clicked()
 void MainWindow::on_setBGColorToFGPushButton_clicked()
 {
 	fgColor = defaultBgColor;
+	colorLabel(ui->fgLabel, fgColor);
 }
 
-void MainWindow::on_drawLinePushButton_clicked()
-{
-	const int x1 = ui->x1SpinBox->text().toInt();
-	const int y1 = ui->y1SpinBox->text().toInt();
-	const int x2 = ui->x2SpinBox->text().toInt();
-	const int y2 = ui->y2SpinBox->text().toInt();
-	const QLine line(x1, y1, x2, y2);
-
+void MainWindow::drawLine(const QLine &line) {
 	if (ui->ddaRadioButton->isChecked())
 		dda(line);
 	else if (ui->bresenhamFloatRadioButton->isChecked())
@@ -323,16 +324,48 @@ void MainWindow::on_drawLinePushButton_clicked()
 		wu(line);
 	else
 		Q_ASSERT(0);
-
-	imageLabel();
 }
+
+void MainWindow::on_drawLinePushButton_clicked()
+{
+	const int x1 = 360 + ui->x1SpinBox->text().toInt();
+	const int y1 = 360 - ui->y1SpinBox->text().toInt();
+	const int x2 = 360 + ui->x2SpinBox->text().toInt();
+	const int y2 = 360 - ui->y2SpinBox->text().toInt();
+	const QLine line(x1, y1, x2, y2);
+
+	QElapsedTimer timer;
+	timer.start();
+
+	drawLine(line);
+
+	ui->statusBar->showMessage(QString::number(timer.nsecsElapsed()));
+
+	imageView();
+}
+
+static inline double toRadians(double x) { return x * M_PIl / 180; }
 
 void MainWindow::on_drawSunPushButton_clicked()
 {
-	//
+	int length = ui->lengthSpinBox->text().toInt();
+	int dangle = ui->angleSpinBox->text().toInt();
+	for (int angle = 0; angle < 360; angle += dangle)
+		drawLine(QLine(360, 360,
+			360 + round(length * cos(toRadians(angle))),
+			360 - round(length * sin(toRadians(angle)))));
+	imageView();
 }
 
 void MainWindow::on_clearAllPushButton_clicked()
 {
+	ui->statusBar->showMessage("");
+	image.fill(defaultBgColor);
+	imageView();
+}
+
+void MainWindow::on_setDefaultFGColorPushButton_clicked()
+{
 	fgColor = defaultFgColor;
+	colorLabel(ui->fgLabel, fgColor);
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>990</width>
-    <height>773</height>
+    <width>998</width>
+    <height>761</height>
    </rect>
   </property>
   <property name="font">
@@ -106,30 +106,6 @@
         </widget>
        </item>
        <item row="4" column="0">
-        <widget class="QLabel" name="widthTextLabel">
-         <property name="text">
-          <string>   width</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QSpinBox" name="widthSpinBox">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QPushButton" name="fgPushButton">
-         <property name="text">
-          <string>Pick FG color</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
         <widget class="QLabel" name="fgLabel">
          <property name="minimumSize">
           <size>
@@ -142,12 +118,26 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="fgPushButton">
+         <property name="text">
+          <string>Pick FG color</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
       <widget class="QPushButton" name="setBGColorToFGPushButton">
        <property name="text">
         <string>Set BG color to FG</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setDefaultFGColorPushButton">
+       <property name="text">
+        <string>Set default FG color</string>
        </property>
       </widget>
      </item>
@@ -233,15 +223,15 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QDoubleSpinBox" name="AngleDoubleSpinBox">
+        <widget class="QSpinBox" name="angleSpinBox">
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <number>1</number>
          </property>
          <property name="maximum">
-          <double>90.000000000000000</double>
+          <number>89</number>
          </property>
          <property name="value">
-          <double>30.000000000000000</double>
+          <number>10</number>
          </property>
         </widget>
        </item>
@@ -268,14 +258,14 @@
      <rect>
       <x>260</x>
       <y>10</y>
-      <width>720</width>
-      <height>720</height>
+      <width>725</width>
+      <height>725</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
-      <width>720</width>
-      <height>720</height>
+      <width>725</width>
+      <height>725</height>
      </size>
     </property>
    </widget>

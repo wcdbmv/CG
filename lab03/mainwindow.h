@@ -19,7 +19,9 @@ public:
 
 private:
 	void colorLabel(QLabel *label, QColor &color);
-	void imageLabel();
+	void imageView();
+
+	void drawLine(const QLine &line);
 
 	void dda(const QLine &line);
 	void bresenhamFloat(const QLine &line);
@@ -34,13 +36,14 @@ private slots:
 	void on_drawLinePushButton_clicked();
 	void on_drawSunPushButton_clicked();
 	void on_clearAllPushButton_clicked();
+	void on_setDefaultFGColorPushButton_clicked();
 
 private:
 	Ui::MainWindow *ui;
 
 	QColor fgColor;
-	const QColor defaultBgColor = QColor(Qt::darkGray);
-	const QColor defaultFgColor = QColor(Qt::red);
+	const QColor defaultBgColor = QColor(11, 11, 11);
+	const QColor defaultFgColor = QColor(10, 200, 10);
 
 	QImage image;
 	QGraphicsScene *scene;
