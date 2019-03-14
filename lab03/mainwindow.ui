@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>927</width>
-    <height>742</height>
+    <width>990</width>
+    <height>773</height>
    </rect>
   </property>
   <property name="font">
@@ -19,27 +19,27 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>11</x>
-      <y>10</y>
+      <x>14</x>
+      <y>13</y>
       <width>240</width>
-      <height>609</height>
+      <height>671</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QFormLayout" name="formLayout_3">
        <item row="0" column="0">
-        <widget class="QLabel" name="xbTextLabel">
+        <widget class="QLabel" name="x1TextLabel">
          <property name="text">
-          <string>x begin</string>
+          <string>          x1</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="xbSpinBox">
+        <widget class="QSpinBox" name="x1SpinBox">
          <property name="minimum">
           <number>-360</number>
          </property>
@@ -49,14 +49,14 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="ybTextLabel">
+        <widget class="QLabel" name="y1TextLabel">
          <property name="text">
-          <string>y begin</string>
+          <string>          y1</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="ybSpinBox">
+        <widget class="QSpinBox" name="y1SpinBox">
          <property name="minimum">
           <number>-360</number>
          </property>
@@ -66,14 +66,14 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="xeTextLabel">
+        <widget class="QLabel" name="x2TextLabel">
          <property name="text">
-          <string>x end</string>
+          <string>          x2</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="xeSpinBox">
+        <widget class="QSpinBox" name="x2SpinBox">
          <property name="minimum">
           <number>-360</number>
          </property>
@@ -86,14 +86,14 @@
         </widget>
        </item>
        <item row="3" column="0">
-        <widget class="QLabel" name="yeTextLabel">
+        <widget class="QLabel" name="y2TextLabel">
          <property name="text">
-          <string>y end</string>
+          <string>          y2</string>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QSpinBox" name="yeSpinBox">
+        <widget class="QSpinBox" name="y2SpinBox">
          <property name="minimum">
           <number>-360</number>
          </property>
@@ -108,7 +108,7 @@
        <item row="4" column="0">
         <widget class="QLabel" name="widthTextLabel">
          <property name="text">
-          <string>width</string>
+          <string>   width</string>
          </property>
         </widget>
        </item>
@@ -122,14 +122,14 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QFormLayout" name="formLayout">
-       <property name="horizontalSpacing">
-        <number>6</number>
-       </property>
-       <item row="0" column="0">
+       <item row="5" column="1">
+        <widget class="QPushButton" name="fgPushButton">
+         <property name="text">
+          <string>Pick FG color</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
         <widget class="QLabel" name="fgLabel">
          <property name="minimumSize">
           <size>
@@ -142,34 +142,14 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="fgPushButton">
-         <property name="text">
-          <string>Pick FG color</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="bgLabel">
-         <property name="minimumSize">
-          <size>
-           <width>64</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="bgPushButton">
-         <property name="text">
-          <string>Pick BG color</string>
-         </property>
-        </widget>
-       </item>
       </layout>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setBGColorToFGPushButton">
+       <property name="text">
+        <string>Set BG color to FG</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="drawLinePushButton">
@@ -210,7 +190,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="defaultRadioButton">
+      <widget class="QRadioButton" name="defaultQtRadioButton">
        <property name="text">
         <string>Defaut (Qt)</string>
        </property>
@@ -233,7 +213,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox_2">
+        <widget class="QSpinBox" name="lengthSpinBox">
          <property name="minimum">
           <number>1</number>
          </property>
@@ -274,7 +254,30 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="clearAllPushButton">
+       <property name="text">
+        <string>Clear all</string>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </widget>
+   <widget class="QGraphicsView" name="graphicsView">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>10</y>
+      <width>720</width>
+      <height>720</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>720</width>
+      <height>720</height>
+     </size>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
