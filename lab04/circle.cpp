@@ -90,11 +90,15 @@ void defaultQt(const QPoint &c, int r, Canvas &canvas)
 	QPainter painter(&pixmap);
 	painter.setPen(*canvas.color);
 
-	{
-		const int _2r = r << 1;
-		painter.drawEllipse(c.x() - r, c.y() - r, _2r, _2r);
-	}
+	defaultQtCore(c, r, painter);
 
 	painter.end();
 	*canvas.image = pixmap.toImage();
 }
+
+void defaultQtCore(const QPoint &c, int r, QPainter &painter)
+{
+	const int _2r = r << 1;
+	painter.drawEllipse(c.x() - r, c.y() - r, _2r, _2r);
+}
+

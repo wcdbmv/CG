@@ -8,5 +8,7 @@ void parametric(const QPoint &center, int radius, Canvas &canvas);
 void bresenham(const QPoint &center, int radius, Canvas &canvas);
 void midPoint(const QPoint &center, int radius, Canvas &canvas);
 void defaultQt(const QPoint &center, int radius, Canvas &canvas);
+void defaultQtCore(const QPoint &center, int radius, QPainter &painter);
+
 
 #endif // CIRCLE_H

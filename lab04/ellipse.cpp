@@ -20,8 +20,8 @@ void parametric(const QPoint &c, int a, int b, Canvas &canvas)
 {
 	const int m = qMax(a, b);
 	const int length4 = round(M_PIl * m / 2.0);
-	for (int i = 0; i != length4; ++i) {
-		const int t = static_cast<double>(i) / m;
+	for (int i = 0; i <= length4; ++i) {
+		const double t = static_cast<double>(i) / m;
 		const int x = round(a * cos(t));
 		const int y = round(b * sin(t));
 		draw4points(c, x, y, canvas);
@@ -29,7 +29,7 @@ void parametric(const QPoint &c, int a, int b, Canvas &canvas)
 }
 
 template <typename T>
-static T inline sqr(T x) { return x * x; }
+static inline T sqr(T x) { return x * x; }
 
 void bresenham(const QPoint &c, int a, int b, Canvas &canvas)
 {
@@ -87,13 +87,13 @@ void midPoint(const QPoint &c, int a, int b, Canvas &canvas)
 		}
 	}
 
-	p = b2 * sqr<double>(x + 0.5) + a2 * sqr<int>(y - 1) - a2 * b2; // начальное значение параметра принятия решения в области tg > 1 в точке (x+0.5, y-1) последнего положения
+	p = b2 * sqr<int>(x + 0.5) + a2 * sqr<int>(y - 1) - a2 * b2; // начальное значение параметра принятия решения в области tg > 1 в точке (x+0.5, y-1) последнего положения
 	while (y >= 0) {
 		draw4points(c, x, y, canvas);
 
 		--y;
 		if (p > 0)
-			p -= a2 * (2 * y + 1);
+			p -= a2 * (1 + 2 * y);
 		else {
 			++x;
 			p += a2 * (1 - 2 * y) + 2 * b2 * x;
@@ -107,8 +107,13 @@ void defaultQt(const QPoint &c, int a, int b, Canvas &canvas)
 	QPainter painter(&pixmap);
 	painter.setPen(*canvas.color);
 
-	painter.drawEllipse(c.x() - a, c.y() - b, a * 2, b * 2);
+	defaultQtCore(c, a, b, painter);
 
 	painter.end();
 	*canvas.image = pixmap.toImage();
+}
+
+void defaultQtCore(const QPoint &c, int a, int b, QPainter &painter)
+{
+	painter.drawEllipse(c.x() - a, c.y() - b, a * 2, b * 2);
 }

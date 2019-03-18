@@ -35,6 +35,7 @@ private slots:
 	void on_drawEllipsesPushButton_clicked();
 	void on_clearAllPushButton_clicked();
 	void on_setDefaultFgColor_clicked();
+	void on_statisticsPushButton_clicked();
 
 private:
 	Ui::MainWindow *ui;

@@ -7,6 +7,7 @@
 
 #include "circle.h"
 #include "ellipse.h"
+#include "dialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -145,8 +146,8 @@ void MainWindow::on_drawCirclesPushButton_clicked()
 
 void MainWindow::on_drawEllipsesPushButton_clicked()
 {
-	int a = ui->aSpinBox->text().toInt();
-	int b = ui->bSpinBox->text().toInt();
+	int a = ui->a0SpinBox->text().toInt();
+	int b = ui->b0SpinBox->text().toInt();
 	const int dr = ui->drSpinBox->text().toInt();
 	const int n = ui->nSpinBox->text().toInt();
 	const QPoint center(360, 360);
@@ -166,4 +167,101 @@ void MainWindow::on_clearAllPushButton_clicked()
 	ui->statusBar->showMessage("");
 	image.fill(defaultBgColor);
 	imageView();
+}
+
+/* this is so ugly i'm so tired don't look */
+void MainWindow::on_statisticsPushButton_clicked()
+{
+	const int N = 50;
+	const int M = 100;
+	double ns[10][M];
+
+	QImage image(721, 721, QImage::Format_ARGB32);
+	image.fill(defaultBgColor);
+	Canvas canvas = { &image, &fgColor };
+	QPoint center(360, 360);
+
+	void (*f[4])(const QPoint &, int, Canvas &) = {
+		canonical,
+		parametric,
+		bresenham,
+		midPoint
+	};
+
+	for (int i = 0; i != 4; ++i) {
+		for (int j = 1; j != M + 1; ++j) {
+			QElapsedTimer timer;
+			timer.start();
+
+			for (int k = 0; k != N; ++k)
+				f[i](center, j, canvas);
+
+			ns[i][j - 1] = static_cast<double>(timer.nsecsElapsed()) / N;
+		}
+	}
+
+	{
+		QPixmap pixmap = QPixmap::fromImage(image);
+		QPainter painter(&pixmap);
+		painter.setPen(fgColor);
+		{
+			for (int j = 1; j != M + 1; ++j) {
+				QElapsedTimer timer;
+				timer.start();
+
+				for (int k = 0; k != N; ++k)
+					defaultQtCore(center, j, painter);
+
+				ns[4][j - 1] = static_cast<double>(timer.nsecsElapsed()) / N;
+			}
+		}
+		painter.end();
+	}
+
+	image.fill(defaultBgColor);
+
+	void (*g[4])(const QPoint &, int, int, Canvas &) = {
+		canonical,
+		parametric,
+		bresenham,
+		midPoint
+	};
+
+	for (int i = 0; i != 4; ++i) {
+		for (int j = 2; j != M + 2; ++j) {
+			QElapsedTimer timer;
+			timer.start();
+
+			for (int k = 0; k != N; ++k)
+				g[i](center, j >> 1, j << 1, canvas);
+
+			ns[i + 5][j - 2] = static_cast<double>(timer.nsecsElapsed()) / N;
+		}
+	}
+
+	{
+		QPixmap pixmap = QPixmap::fromImage(image);
+		QPainter painter(&pixmap);
+		painter.setPen(fgColor);
+		{
+			for (int j = 1; j != M + 1; ++j) {
+				QElapsedTimer timer;
+				timer.start();
+
+				for (int k = 0; k != N; ++k)
+					defaultQtCore(center, j >> 1, j << 1, painter);
+
+				ns[9][j - 1] = static_cast<double>(timer.nsecsElapsed()) / N;
+			}
+		}
+		painter.end();
+	}
+
+	QVector<QVector<double>> qns(10);
+	for (int i = 0; i != 10; ++i)
+		std::copy(ns[i], ns[i] + M, std::back_inserter(qns[i]));
+
+	Dialog dialog(qns, M);
+	dialog.setModal(true);
+	dialog.exec();
 }

@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = lab04
 TEMPLATE = app
@@ -28,14 +28,19 @@ SOURCES += \
         mainwindow.cpp \
     circle.cpp \
     ellipse.cpp \
-    draw4points.cpp
+    draw4points.cpp \
+    qcustomplot.cpp \
+    dialog.cpp
 
 HEADERS += \
         mainwindow.h \
     circle.h \
     ellipse.h \
     canvas.h \
-    draw4points.h
+    draw4points.h \
+    qcustomplot.h \
+    dialog.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    dialog.ui
