@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QGraphicsScene>
 
+#include "canvas.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -21,14 +23,7 @@ private:
 	void colorLabel(QLabel *label, QColor &color);
 	void imageView();
 
-	void drawLine(const QLine &line);
-
-	void dda(const QLine &line);
-	void bresenhamFloat(const QLine &line);
-	void bresenhamInteger(const QLine &line);
-	void bresenhamAntialiased(const QLine &line);
-	void defaultQt(const QLine &line);
-	void wu(const QLine &line);
+	void drawLine(const QLine &line, Canvas &canvas);
 
 private slots:
 	void on_fgPushButton_clicked();
@@ -37,6 +32,7 @@ private slots:
 	void on_drawSunPushButton_clicked();
 	void on_clearAllPushButton_clicked();
 	void on_setDefaultFGColorPushButton_clicked();
+	void on_statisticsPushButton_clicked();
 
 private:
 	Ui::MainWindow *ui;

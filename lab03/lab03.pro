@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = lab03
 TEMPLATE = app
@@ -25,10 +25,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    line.cpp \
+    dialog.cpp \
+    qcustomplot.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    canvas.h \
+    line.h \
+    dialog.h \
+    qcustomplot.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    dialog.ui

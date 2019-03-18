@@ -25,7 +25,7 @@
       <x>14</x>
       <y>13</y>
       <width>240</width>
-      <height>671</height>
+      <height>678</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -248,6 +248,13 @@
       <widget class="QPushButton" name="clearAllPushButton">
        <property name="text">
         <string>Clear all</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="statisticsPushButton">
+       <property name="text">
+        <string>Statistics</string>
        </property>
       </widget>
      </item>
