@@ -154,7 +154,7 @@
         <string>DDA</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -162,6 +162,9 @@
       <widget class="QRadioButton" name="bresenhamFloatRadioButton">
        <property name="text">
         <string>Bresenham (float)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

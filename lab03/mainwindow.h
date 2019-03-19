@@ -23,7 +23,8 @@ private:
 	void colorLabel(QLabel *label, QColor &color);
 	void imageView();
 
-	void drawLine(const QLine &line, Canvas &canvas);
+	bool drawLine(const QLine &line, Canvas &canvas);
+	void drawPoint(const QPoint &point);
 
 private slots:
 	void on_fgPushButton_clicked();

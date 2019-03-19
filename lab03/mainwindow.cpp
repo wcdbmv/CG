@@ -53,19 +53,32 @@ void MainWindow::on_setBGColorToFGPushButton_clicked()
 	colorLabel(ui->fgLabel, fgColor);
 }
 
-void MainWindow::drawLine(const QLine &line, Canvas &canvas) {
+bool MainWindow::drawLine(const QLine &line, Canvas &canvas) {
 	if (ui->ddaRadioButton->isChecked())
-		dda(line, canvas);
+		return dda(line, canvas);
 	else if (ui->bresenhamFloatRadioButton->isChecked())
-		bresenhamFloat(line, canvas);
+		return bresenhamFloat(line, canvas);
 	else if (ui->bresenhamIntegerRadioButton->isChecked())
-		bresenhamInteger(line, canvas);
+		return bresenhamInteger(line, canvas);
 	else if (ui->bresenhamAntialiasedRadioButton->isChecked())
-		bresenhamAntialiased(line, canvas);
+		return bresenhamAntialiased(line, canvas);
 	else if (ui->defaultQtRadioButton->isChecked())
-		defaultQt(line, canvas);
+		return defaultQt(line, canvas);
 	else if (ui->wuRadioButton->isChecked())
-		wu(line, canvas);
+		return wu(line, canvas);
+	return true;
+}
+
+void MainWindow::drawPoint(const QPoint &point)
+{
+	QPixmap pixmap = QPixmap::fromImage(image);
+	QPainter painter(&pixmap);
+	painter.setPen(Qt::red);
+
+	painter.drawEllipse(point, 3, 3);
+
+	painter.end();
+	image = pixmap.toImage();
 }
 
 void MainWindow::on_drawLinePushButton_clicked()
@@ -95,11 +108,12 @@ void MainWindow::on_drawSunPushButton_clicked()
 	int length = ui->lengthSpinBox->text().toInt();
 	int dangle = ui->angleSpinBox->text().toInt();
 	Canvas canvas = { &image, &fgColor };
-	for (int angle = 0; angle < 360; angle += dangle)
-		drawLine(QLine(360, 360,
-			360 + round(length * cos(toRadians(angle))),
-			360 - round(length * sin(toRadians(angle)))),
-			canvas);
+	for (int angle = 0; angle < 360; angle += dangle) {
+		const int x2 = 360 + round(length * cos(toRadians(angle)));
+		const int y2 = 360 - round(length * sin(toRadians(angle)));
+		if (!drawLine(QLine(360, 360, x2, y2), canvas))
+			drawPoint(QPoint(x2, y2));
+	}
 	imageView();
 }
 
@@ -126,7 +140,7 @@ void MainWindow::on_statisticsPushButton_clicked()
 	image.fill(defaultBgColor);
 	Canvas canvas = { &image, &fgColor };
 
-	void (*f[5])(const QLine &, Canvas &) = {
+	bool (*f[5])(const QLine &, Canvas &) = {
 		dda,
 		bresenhamFloat,
 		bresenhamInteger,
