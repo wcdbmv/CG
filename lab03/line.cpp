@@ -27,13 +27,11 @@ bool dda(const QLine &line, Canvas &canvas)
 	const double dx = (double) deltaX / length;
 	const double dy = (double) deltaY / length;
 
-	// Округляем величины, а не отбрасываем дробную часть
-	// Использование знаковой функции делает алгоритм пригодным для всех квадрантов
-	double xf = line.p1().x() + 0.5 * sgn1(dx);
-	double yf = line.p1().y() + 0.5 * sgn1(dy);
+	double xf = line.p1().x();
+	double yf = line.p1().y();
 
 	// Начало основного цикла
-	while (length--) {
+	for (int i = 0; i <= length; ++i) {
 		const int x = qRound(xf);
 		const int y = qRound(yf);
 		check_curr_point;
@@ -91,7 +89,7 @@ bool bresenhamFloat(const QLine &line, Canvas &canvas)
 	double e = m - 0.5;
 
 	// Начало основного цикла
-	for (int i = 0; i != dx + 1; ++i) {
+	for (int i = 0; i <= dx; ++i) {
 		check_curr_point;
 		canvas.image->setPixel(x, y, canvas.color->rgb());
 		if (e >= 0.0) {
@@ -146,7 +144,7 @@ bool bresenhamInteger(const QLine &line, Canvas &canvas)
 	int e = dy2 - dx;
 
 	// Начало основного цикла
-	for (int i = 0; i != dx + 1; ++i) {
+	for (int i = 0; i <= dx; ++i) {
 		check_curr_point;
 		canvas.image->setPixel(x, y, canvas.color->rgb());
 		if (e >= 0.0) {
@@ -200,7 +198,7 @@ bool bresenhamAntialiased(const QLine &line, Canvas &canvas)
 	double e = i_max / 2.0;
 	double w = i_max - m;
 	QColor color(canvas.color->rgba());
-	for (int i = 0; i != dx + 1; ++i) {
+	for (int i = 0; i <= dx; ++i) {
 		check_curr_point;
 		color.setAlpha(i_max - e);
 		canvas.image->setPixel(x, y, color.rgba());

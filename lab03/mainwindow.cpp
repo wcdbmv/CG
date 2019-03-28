@@ -12,12 +12,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
 	fgColor(defaultFgColor),
-	image(QImage(721, 721, QImage::Format_ARGB32)),
 	scene(new QGraphicsScene(0, 0, 720, 720))
 {
 	ui->setupUi(this);
 
 	ui->graphicsView->setScene(scene);
+	clearImage();
 	imageView();
 
 	on_clearAllPushButton_clicked();
@@ -35,6 +35,11 @@ void MainWindow::colorLabel(QLabel *label, QColor &color)
 	palette.setColor(label->backgroundRole(), color);
 	label->setAutoFillBackground(true);
 	label->setPalette(palette);
+}
+
+void MainWindow::clearImage() {
+	image = QImage(721, 721, QImage::Format_ARGB32);
+	image.fill(defaultBgColor);
 }
 
 void MainWindow::imageView() {
@@ -120,7 +125,7 @@ void MainWindow::on_drawSunPushButton_clicked()
 void MainWindow::on_clearAllPushButton_clicked()
 {
 	ui->statusBar->showMessage("");
-	image.fill(defaultBgColor);
+	clearImage();
 	imageView();
 }
 
@@ -130,6 +135,7 @@ void MainWindow::on_setDefaultFGColorPushButton_clicked()
 	colorLabel(ui->fgLabel, fgColor);
 }
 
+// TODO: посчитать один разочек, сохранить и вывести
 void MainWindow::on_statisticsPushButton_clicked()
 {
 	const int N = 1000;
@@ -140,7 +146,9 @@ void MainWindow::on_statisticsPushButton_clicked()
 	image.fill(defaultBgColor);
 	Canvas canvas = { &image, &fgColor };
 
-	bool (*f[5])(const QLine &, Canvas &) = {
+	bool (*f[7])(const QLine &, Canvas &) = {
+		dda,
+		wu,
 		dda,
 		bresenhamFloat,
 		bresenhamInteger,
@@ -148,7 +156,7 @@ void MainWindow::on_statisticsPushButton_clicked()
 		wu
 	};
 
-	for (int i = 0; i != 5; ++i) {
+	for (int i = 0; i != 7; ++i) {
 		for (int j = 1; j != M + 1; ++j) {
 			QElapsedTimer timer;
 			timer.start();
@@ -156,7 +164,7 @@ void MainWindow::on_statisticsPushButton_clicked()
 			for (int k = 0; k != N; ++k)
 				f[i](QLine(360, 360, 360 + j, 360 - j), canvas);
 
-			ns[i][j - 1] = static_cast<double>(timer.nsecsElapsed()) / N;
+			ns[(i > 1? i - 2 : 0)][j - 1] = static_cast<double>(timer.nsecsElapsed()) / N;
 		}
 	}
 

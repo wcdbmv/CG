@@ -21,6 +21,7 @@ public:
 
 private:
 	void colorLabel(QLabel *label, QColor &color);
+	void clearImage();
 	void imageView();
 
 	bool drawLine(const QLine &line, Canvas &canvas);
