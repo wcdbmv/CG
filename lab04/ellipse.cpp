@@ -3,47 +3,53 @@
 #include <QPainter>
 #include <cmath>
 
-void canonical(const QPoint &c, int a, int b, Canvas &canvas)
+void canonical(const QPoint &c, const int a, const int b, Canvas &canvas)
 {
-	for (int x = 0; x <= a; ++x) {
-		const int y = round(b * sqrt(1.0 - static_cast<double>(x*x) / (a*a)));
+	const int a2 = a * a;
+	const int b2 = b * b;
+
+	const float bDivA = static_cast<float>(b) / a;
+	const int deltaX = qRound(a2 / sqrt(a2 + b2));
+	for (int x = 0; x <= deltaX; ++x) {
+		const int y = qRound(sqrt(static_cast<float>(a2 - x*x)) * bDivA);
 		draw4points(c, x, y, canvas);
 	}
 
-	for (int y = 0; y <= b; ++y) {
-		const int x = round(a * sqrt(1.0 - static_cast<double>(y*y) / (b*b)));
+	const float aDivB = static_cast<float>(a) / b;
+	const int deltaY = qRound(b2 / sqrt(a2 + b2));
+	for (int y = 0; y <= deltaY; ++y) {
+		const int x = qRound(sqrt(static_cast<float>(b2 - y*y)) * aDivB);
 		draw4points(c, x, y, canvas);
 	}
 }
 
-void parametric(const QPoint &c, int a, int b, Canvas &canvas)
+
+void parametric(const QPoint &c, const int a, const int b, Canvas &canvas)
 {
-	const int m = qMax(a, b);
-	const int length4 = round(M_PIl * m / 2.0);
-	for (int i = 0; i <= length4; ++i) {
-		const double t = static_cast<double>(i) / m;
-		const int x = round(a * cos(t));
-		const int y = round(b * sin(t));
+	const float dt = 1.0f / qMax(a, b);
+	for (float t = M_PI / 2.0f; t >= -dt / 2.0f; t -= dt) {
+		const int x = qRound(a * cos(t));
+		const int y = qRound(b * sin(t));
 		draw4points(c, x, y, canvas);
 	}
 }
 
-template <typename T>
-static inline T sqr(T x) { return x * x; }
-
-void bresenham(const QPoint &c, int a, int b, Canvas &canvas)
+void bresenham(const QPoint &c, const int a, const int b, Canvas &canvas)
 {
 	int x = 0;
 	int y = b;
-	const int a2 = sqr<int>(a);
-	const int b2 = sqr<int>(b);
-	int d = round((a2 + b2) / 2.0 - 2 * a2 * b);
+
+	const int a2 = a * a;
+	const int b2 = b * b;
+
+	// разность квадратов расстояний от центра окружности эллипса до диагонального пиксела и до идеального эллипса
+	int d = a2 + b2 - 2 * a2 * y;
 	while (y >= 0) {
 		draw4points(c, x, y, canvas);
 		if (d < 0) { // пиксел лежит внутри эллипса
-			const int buf = 2 * (d + a2 * y) - a2;
+			const int d1 = 2 * (d + a2 * y) - a2; // lг - lд
 			++x;
-			if (buf <= 0) // горизонтальный шаг
+			if (d1 < 0) // горизонтальный шаг
 				d += b2 * (2 * x + 1);
 			else { // диагональный шаг
 				--y;
@@ -51,9 +57,9 @@ void bresenham(const QPoint &c, int a, int b, Canvas &canvas)
 			}
 		}
 		else if (d > 0) { // пиксел лежит вне эллипса
-			const int buf = 2 * (d - b2 * x) - b2;
+			const int d2 = 2 * (d - b2 * x) - b2; // lв - lд
 			--y;
-			if (buf > 0) // вертикальный шаг
+			if (d2 >= 0) // вертикальный шаг
 				d += a2 * (1 - 2 * y);
 			else { // диагональный шаг
 				++x;
@@ -68,40 +74,40 @@ void bresenham(const QPoint &c, int a, int b, Canvas &canvas)
 	}
 }
 
-void midPoint(const QPoint &c, int a, int b, Canvas &canvas)
-{
+void midPoint(const QPoint& c, const int a, const int b, Canvas &canvas) {
+	const int a2 = a * a;
+	const int b2 = b * b;
+
 	int x = 0;
 	int y = b;
-	const int a2 = sqr<int>(a);
-	const int b2 = sqr<int>(b);
-	double p = b2 - a2 * b + 0.25 * a2; // начальное значение параметра принятия решения в области tg < 1
-	while (b2 * x < a2 * y) { // пока тангенс угла наклона меньше 1
+
+	int f = b2 + a2 * (y - 0.5f) * (y - 0.5) - static_cast<long long>(a2) * b2;
+	const int deltaX = a2 / sqrt(b2 + a2);
+	while (x <= deltaX) {
 		draw4points(c, x, y, canvas);
 
 		++x;
-		if (p < 0) // средняя точка внутри эллипса, ближе верхний пиксел, горизонталный шаг
-			p += b2 * (2 * x + 1);
-		else { // средняя точка вне эллипса, ближе диагональный пиксел, диагональный шаг
+		if (f > 0) {
 			--y;
-			p += b2 * (2 * x + 1) - 2 * a2 * y;
+			f += -2 * a2 * y; // f += dy;
 		}
+		f += b2 * (2 * x + 1); // f += df;
 	}
 
-	p = b2 * sqr<int>(x + 0.5) + a2 * sqr<int>(y - 1) - a2 * b2; // начальное значение параметра принятия решения в области tg > 1 в точке (x+0.5, y-1) последнего положения
-	while (y >= 0) {
+	f += 0.75f * (a2 - b2) - (b2 * x + a2 * y);
+	while (y >= 0){
 		draw4points(c, x, y, canvas);
 
 		--y;
-		if (p > 0)
-			p -= a2 * (1 + 2 * y);
-		else {
+		if (f < 0) {
 			++x;
-			p += a2 * (1 - 2 * y) + 2 * b2 * x;
+			f += 2 * b2 * x; // f += dx;
 		}
+		f += a2 * (1 - 2 * y); // f += df;
 	}
 }
 
-void defaultQt(const QPoint &c, int a, int b, Canvas &canvas)
+void defaultQt(const QPoint &c, const int a, const int b, Canvas &canvas)
 {
 	QPixmap pixmap = QPixmap::fromImage(*canvas.image);
 	QPainter painter(&pixmap);
@@ -113,7 +119,7 @@ void defaultQt(const QPoint &c, int a, int b, Canvas &canvas)
 	*canvas.image = pixmap.toImage();
 }
 
-void defaultQtCore(const QPoint &c, int a, int b, QPainter &painter)
+void defaultQtCore(const QPoint &c, const int a, const int b, QPainter &painter)
 {
-	painter.drawEllipse(c.x() - a, c.y() - b, a * 2, b * 2);
+	painter.drawEllipse(c.x() - a, c.y() - b, 2 * a, 2 * b);
 }

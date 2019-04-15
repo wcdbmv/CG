@@ -35,13 +35,13 @@
      </size>
     </property>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>12</y>
+      <x>11</x>
+      <y>13</y>
       <width>247</width>
-      <height>732</height>
+      <height>696</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -295,7 +295,7 @@
               <number>720</number>
              </property>
              <property name="value">
-              <number>25</number>
+              <number>75</number>
              </property>
             </widget>
            </item>
@@ -391,13 +391,6 @@
       <widget class="QPushButton" name="clearAllPushButton">
        <property name="text">
         <string>Clear all</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="statisticsPushButton">
-       <property name="text">
-        <string>Statistics</string>
        </property>
       </widget>
      </item>

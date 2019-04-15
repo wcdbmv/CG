@@ -28,19 +28,14 @@ SOURCES += \
         mainwindow.cpp \
     circle.cpp \
     ellipse.cpp \
-    draw4points.cpp \
-    qcustomplot.cpp \
-    dialog.cpp
+    draw4points.cpp
 
 HEADERS += \
         mainwindow.h \
     circle.h \
     ellipse.h \
     canvas.h \
-    draw4points.h \
-    qcustomplot.h \
-    dialog.h
+    draw4points.h
 
 FORMS += \
-        mainwindow.ui \
-    dialog.ui
+        mainwindow.ui
