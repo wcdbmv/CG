@@ -68,13 +68,13 @@ void MainWindow::on_addPointPushButton_clicked()
 
 void MainWindow::on_closePushButton_clicked()
 {
-	if (edges.size() <= 2) {
-		QMessageBox::critical(this, "Error", "Need at least 2 edges");
+	if (closed) {
+		QMessageBox::critical(this, "Error", "Already closed");
 		return;
 	}
 
-	if (closed) {
-		QMessageBox::critical(this, "Error", "Already closed");
+	if (start_point + 2 >= points.size()) {
+		QMessageBox::critical(this, "Error", "Need at least 2 edges");
 		return;
 	}
 
@@ -142,7 +142,7 @@ void MainWindow::pushNewSeed(QStack<QPoint> &stack, int y, int x_left, int x_rig
 
 	for (int x = x_left; x <= x_right;) {
 		bool flag = false;
-		for (; cleanPixel(x, y); ++x)
+		for (; x <= x_right && cleanPixel(x, y); ++x)
 			flag = true;
 		if (flag)
 			stack.push(QPoint(
