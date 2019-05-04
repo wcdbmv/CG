@@ -34,18 +34,20 @@ private:
 	bool closed;
 	QVector<QPoint> points;
 	QVector<QLine> edges;
+	QVector<QPoint> intersections;
 
-	QPixmap bitmap;
-	QImage image;
-	QGraphicsScene *scene;
-	QGraphicsPixmapItem *bitmap_item;
+	QPixmap pixmap;
 
+	int n_edges;
 	enum DrawType {	none, horizontal, vertical, diagonal };
 	void addPoint(const QPoint &point, DrawType drawType);
 	void addEdge(const QLine &edge);
 
+	void delay(int);
 	void clearImage();
 	void displayImage();
+
+	void dda(const QLine &edge);
 };
 
 #endif // MAINWINDOW_H
