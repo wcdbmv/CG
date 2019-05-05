@@ -27,6 +27,7 @@ private slots:
 	void on_closePushButton_clicked();
 	void on_fillPushButton_clicked();
 	void on_clearPushButton_clicked();
+	void on_setColorPushButton_clicked();
 
 private:
 	Ui::MainWindow *ui;
@@ -37,17 +38,21 @@ private:
 	QVector<QPoint> intersections;
 
 	QPixmap pixmap;
+	QImage image;
+	const QColor defaultBoundColor = Qt::black;
+	const QColor defaultFillColor = QColor(2, 2, 2);
+	QColor fillColor;
 
 	int n_edges;
 	enum DrawType {	none, horizontal, vertical, diagonal };
 	void addPoint(const QPoint &point, DrawType drawType);
 	void addEdge(const QLine &edge);
+	void dda(const QLine &edge);
 
 	void delay(int);
 	void clearImage();
 	void displayImage();
-
-	void dda(const QLine &edge);
+	void colorLabel();
 };
 
 #endif // MAINWINDOW_H

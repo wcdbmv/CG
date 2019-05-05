@@ -10,14 +10,19 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
 	closed(false),
+	fillColor(defaultFillColor),
 	n_edges(0)
 {
 	ui->setupUi(this);
 
 	pixmap = QPixmap(ui->drawLabel->width(), ui->drawLabel->height());
+	image = QImage(ui->drawLabel->width(), ui->drawLabel->height(), QImage::Format_RGB32);
 	ui->drawLabel->setPixmapPointer(pixmap);
 
 	clearImage();
+	colorLabel();
+
+	Q_ASSERT(defaultBoundColor != defaultFillColor);
 }
 
 MainWindow::~MainWindow()
@@ -141,11 +146,16 @@ void MainWindow::on_fillPushButton_clicked()
 	sortX(intersections, indices);
 
 	QPainter painter(&pixmap);
+	painter.setPen(fillColor);
+
 	for (int k = 0; k < indices.size() - 1; ++k) {
 		const int ix_begin = indices[k];
 		const int ix_end = indices[k + 1];
+		const int y = intersections[ix_begin].y();
 		for (int i = ix_begin; i < ix_end - 1; i += 2)
-			painter.drawLine(intersections[i], intersections[i + 1]);
+			for (int x = intersections[i].x(); x <= intersections[i + 1].x(); ++x)
+				if (image.pixelColor(x, y) != defaultBoundColor)
+					painter.drawPoint(x, y);
 		if (ui->delayCheckBox->isChecked()) {
 			displayImage();
 			delay(ui->delaySpinBox->value());
@@ -162,9 +172,19 @@ void MainWindow::on_clearPushButton_clicked()
 	points.clear();
 	edges.clear();
 	intersections.clear();
+	fillColor = defaultFillColor;
+	colorLabel();
 	n_edges = 0;
 	ui->tableWidget->clearContents();
 	ui->tableWidget->model()->removeRows(0, ui->tableWidget->rowCount());
+}
+
+void MainWindow::on_setColorPushButton_clicked()
+{
+	fillColor = QColorDialog::getColor(fillColor, this, "Pick a color", QColorDialog::DontUseNativeDialog);
+	if (fillColor == defaultBoundColor)
+		fillColor = defaultFillColor;
+	colorLabel();
 }
 
 void MainWindow::addPoint(const QPoint &point, DrawType drawType)
@@ -227,6 +247,7 @@ void MainWindow::dda(const QLine &edge)
 	int length = qMax(qAbs(deltaX), qAbs(deltaY));
 
 	QPainter painter(&pixmap);
+	painter.setPen(defaultBoundColor);
 
 	const bool horizontal = edge.p1().y() == edge.p2().y();
 	if (horizontal && edge.p1().x() == edge.p1().y()) {
@@ -282,4 +303,13 @@ void MainWindow::clearImage()
 void MainWindow::displayImage()
 {
 	ui->drawLabel->update();
+	image = pixmap.toImage();
+}
+
+void MainWindow::colorLabel()
+{
+	QPalette palette = ui->colorLabel->palette();
+	palette.setColor(ui->colorLabel->backgroundRole(), fillColor);
+	ui->colorLabel->setAutoFillBackground(true);
+	ui->colorLabel->setPalette(palette);
 }
