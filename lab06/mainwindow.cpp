@@ -171,10 +171,8 @@ void MainWindow::on_clearPushButton_clicked()
 void MainWindow::on_setColorPushButton_clicked()
 {
 	fillColor = QColorDialog::getColor(fillColor, this, "Pick a color", QColorDialog::DontUseNativeDialog);
-	if (fillColor == defaultBoundColor) {
-		QMessageBox::critical(this, "Error", "Fill color can't be equal to edge color");
-		fillColor = defaultFillColor;
-	}
+	if (fillColor == defaultBoundColor)
+		fillColor = QColor(2, 2, 2);
 	colorLabel();
 }
 
