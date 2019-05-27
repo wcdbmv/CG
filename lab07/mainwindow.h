@@ -55,9 +55,8 @@ private:
 	void addLine(const QLine &line);
 	void setClipper(const QRect &clipper);
 
-	void clipLine(QLine &line, int xl, int xr, int yb, int yt, QPainter &painter);
-	int code(const QPoint &p, int xl, int xr, int yb, int yt);
-	QPoint intersection(QLine &line, int xl, int xr, int yb, int yt, bool first);
+	void clipLine(const QLine &line, int xl, int xr, int yb, int yt, QPainter &painter);
+	int code(const QPoint &point, int xl, int xr, int yb, int yt);
 };
 
 #endif // MAINWINDOW_H

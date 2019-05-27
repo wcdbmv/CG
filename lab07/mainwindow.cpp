@@ -3,6 +3,9 @@
 
 #include <QColorDialog>
 #include <QLayout>
+#include <cmath>
+
+const double EPS = sqrt(2);
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -69,12 +72,12 @@ void MainWindow::on_setClippedLineColorPushButton_clicked()
 void MainWindow::on_clipPushButton_clicked()
 {
 	QPainter painter(&pixmap);
-	painter.setPen(clippedLineColor);
+	painter.setPen(QPen(clippedLineColor, 3));
 
 	const int xl = clipper.x();
 	const int xr = xl + clipper.width();
-	const int yt = clipper.y();
-	const int yb = yt + clipper.height();
+	const int yb = clipper.y();
+	const int yt = yb + clipper.height();
 
 	for (auto &line: lines)
 		clipLine(line, xl, xr, yb, yt, painter);
@@ -223,106 +226,61 @@ void MainWindow::setClipper(const QRect &clipper)
 	displayImage();
 }
 
-void MainWindow::clipLine(QLine &line, int xl, int xr, int yb, int yt, QPainter &painter)
+void MainWindow::clipLine(const QLine &line, int xl, int xr, int yb, int yt, QPainter &painter)
 {
 	QPoint p1 = line.p1();
 	QPoint p2 = line.p2();
+	int i = 1;
+	while (true) {
+		int t1 = code(p1, xl, xr, yb, yt);
+		int t2 = code(p2, xl, xr, yb, yt);
 
-	int t1 = code(p1, xl, xr, yb, yt);
-	int t2 = code(p2, xl, xr, yb, yt);
+		if (!t1 && !t2) { // line is fully visible
+			painter.drawLine(p1, p2);
+			return;
+		}
 
-	QPoint p1_res = p1;
-	QPoint p2_res = p2;
+		if (t1 & t2) // line is fully invisible
+			return;
 
-	if (!t1 && !t2) { // line is fully visible
-		painter.drawLine(line);
-		return;
-	}
+		QPoint r = p1;
+		if (i > 2) {
+			if ((t1 & t2) == 0)
+				painter.drawLine(p1.x() + 1, p1.y() + 1, p2.x() + 1, p2.y() + 1);
+			return;
+		}
 
-	if (t1 & t2)
-		return; // line is fully invisible
-
-	if (t1) // first point is inside the window
-		p1_res = intersection(line, xl, xr, yb, yt, true);
-
-	if (t2) // second point is inside the window
-		p2_res = intersection(line, xl, xr, yb, yt, false);
-
-	if (p1_res.x() == -1 || p2_res.x() == -1)
-		return;
-
-	painter.drawLine(p1_res, p2_res);
-}
-
-int MainWindow::code(const QPoint &p, int xl, int xr, int yb, int yt)
-{
-	int code = 0;
-
-	if (p.x() < xl)
-		code |= 1 << 3;
-	if (p.x() > xr)
-		code |= 1 << 2;
-	if (p.y() > yb)
-		code |= 1 << 1;
-	if (p.y() < yt)
-		code |= 1;
-
-	return code;
-}
-
-QPoint MainWindow::intersection(QLine &line, int xl, int xr, int yb, int yt, bool first)
-{
-	QPoint p1 = line.p1();
-	QPoint p2 = line.p2();
-
-	double m = 1e10; // just very big value
-
-	QPoint p = first? line.p1() : line.p2();
-
-	if (p2.x() - p1.x() != 0) { // line isn't vertical
-		// looking for intersection with left side
-		m = double(p2.y() - p1.y()) / (p2.x() - p1.x());
-		if (xl >= p.x()) {
-			int y = qRound(m * (xl - p.x()) + p.y());
-			if (y >= yt && y <= yb) {
-				p.setY(y);
-				p.setX(xl);
-				return p; // intersection was found
+		if (t2) {
+			while (qAbs(p1.x() - p2.x()) > EPS || qAbs(p1.y() - p2.y()) > EPS) {
+				QPoint pm((p1.x() + p2.x()) >> 1, (p1.y() + p2.y()) >> 1);
+				QPoint tmp_p1 = p1;
+				p1 = pm;
+				t1 = code(p1, xl, xr, yb, yt);
+				if (t1 & t2) {
+					p1 = tmp_p1;
+					p2 = pm;
+				}
 			}
 		}
-		// loking for intersection with right side
-		if (xr <= p.x()){
-			int y = qRound(m * (xr - p.x()) + p.y());
-			if (y >= yt && y <= yb) {
-				p.setX(xr);
-				p.setY(y);
-				return p; // intersection was found
-			}
-		}
+		p1 = p2;
+		p2 = r;
+		++i;
 	}
-	// check if line is horisontal
-	if (m == 0.) {
-		return QPoint(-1, -1);
-	}
-	// looking for intersection with top side
-	if (yt >= p.y()) {
-		int x = qRound((1 / m) * (yt - p.y()) + p.x());
-		if (x >= xl && x <= xr) {
-			p.setX(x);
-			p.setY(yt);
-			return p; // intersection was found
-		}
-	}
-	if (yb > p.y()) {
-		return QPoint(-1, -1); // error situation here, assert(false) can be used here
-	}
-	// looking for intersection with bottom side
-	int x = qRound((1 / m) * (yb - p.y()) + p.x());
-	if (x >= xl && x <= xr) {
-		p.setX(x);
-		p.setY(yb);
-		return p; // intersection was found
-	}
-	// line is invisiable
-	return QPoint(-1, -1);
 }
+
+int MainWindow::code(const QPoint& point, int xl, int xr, int yb, int yt)
+{
+	int result = 0;
+
+	if (point.x() < xl)
+		result |= 1 << 3;
+	if (point.x() > xr)
+		result |= 1 << 2;
+	if (point.y() < yb)
+		result |= 1 << 1;
+	if (point.y() > yt)
+		result |= 1;
+
+	return result;
+}
+
