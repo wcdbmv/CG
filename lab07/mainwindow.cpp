@@ -177,7 +177,7 @@ void MainWindow::displayImage()
 
 	QPainter painter(&pixmap);
 
-	painter.setPen(clipperColor);
+	painter.setPen(QPen(clipperColor, 3));
 	painter.drawRect(clipper);
 
 	painter.setPen(lineBaseColor);
@@ -230,8 +230,7 @@ void MainWindow::clipLine(const QLine &line, int xl, int xr, int yb, int yt, QPa
 {
 	QPoint p1 = line.p1();
 	QPoint p2 = line.p2();
-	int i = 1;
-	while (true) {
+	for (int i = 1; i <= 3; ++i) {
 		int t1 = code(p1, xl, xr, yb, yt);
 		int t2 = code(p2, xl, xr, yb, yt);
 
@@ -246,25 +245,23 @@ void MainWindow::clipLine(const QLine &line, int xl, int xr, int yb, int yt, QPa
 		QPoint r = p1;
 		if (i > 2) {
 			if ((t1 & t2) == 0)
-				painter.drawLine(p1.x() + 1, p1.y() + 1, p2.x() + 1, p2.y() + 1);
+				painter.drawLine(p1, p2);
 			return;
 		}
 
 		if (t2) {
+			// TODO: сделать нормальный выход из цикла
 			while (qAbs(p1.x() - p2.x()) > EPS || qAbs(p1.y() - p2.y()) > EPS) {
-				QPoint pm((p1.x() + p2.x()) >> 1, (p1.y() + p2.y()) >> 1);
-				QPoint tmp_p1 = p1;
-				p1 = pm;
-				t1 = code(p1, xl, xr, yb, yt);
-				if (t1 & t2) {
-					p1 = tmp_p1;
+				const QPoint pm = (p1 + p2) / 2;
+				const int tm = code(pm, xl, xr, yb, yt);
+				if (tm & t2)
 					p2 = pm;
-				}
+				else
+					p1 = pm;
 			}
 		}
 		p1 = p2;
 		p2 = r;
-		++i;
 	}
 }
 
@@ -273,13 +270,13 @@ int MainWindow::code(const QPoint& point, int xl, int xr, int yb, int yt)
 	int result = 0;
 
 	if (point.x() < xl)
-		result |= 1 << 3;
-	if (point.x() > xr)
-		result |= 1 << 2;
-	if (point.y() < yb)
-		result |= 1 << 1;
-	if (point.y() > yt)
 		result |= 1;
+	if (point.x() > xr)
+		result |= 1 << 1;
+	if (point.y() < yb)
+		result |= 1 << 2;
+	if (point.y() > yt)
+		result |= 1 << 3;
 
 	return result;
 }
