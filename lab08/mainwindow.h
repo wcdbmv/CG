@@ -53,7 +53,7 @@ private:
 	bool closed;
 	void addLine(const QLine &line);
 	int checkClipper();
-	void clipLine(const QLine &line, int direction, QPainter &painter);
+	void clipLine(const QLine &line, int direction, const QVector<QLine> &edges, QPainter &painter);
 };
 
 #endif // MAINWINDOW_H

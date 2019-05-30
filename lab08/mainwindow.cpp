@@ -62,6 +62,16 @@ void MainWindow::on_setClippedLineColorPushButton_clicked()
 	displayImage();
 }
 
+QVector<QLine> verticesToEdges(const QVector<QPoint>& vertices)
+{
+	QVector<QLine> edges;
+
+	for (int i = 1; i < vertices.size(); ++i)
+		edges.push_back(QLine(vertices[i - 1], vertices[i]));
+	edges.push_back(QLine(vertices.back(), vertices.front()));
+
+	return edges;
+}
 
 void MainWindow::on_clipPushButton_clicked()
 {
@@ -71,11 +81,13 @@ void MainWindow::on_clipPushButton_clicked()
 		return;
 	}
 
+	auto edges = verticesToEdges(clipper_vertices);
+
 	QPainter painter(&pixmap);
-	painter.setPen(clippedLineColor);
+	painter.setPen(QPen(clippedLineColor, 3));
 
 	for (const auto &line: lines)
-		clipLine(line, direction, painter);
+		clipLine(line, direction, edges, painter);
 
 	ui->drawLabel->update();
 }
@@ -191,7 +203,7 @@ void MainWindow::displayImage()
 
 	QPainter painter(&pixmap);
 
-	painter.setPen(clipperColor);
+	painter.setPen(QPen(clipperColor, 3));
 	for (int i = 1; i < clipper_vertices.size(); ++i)
 		painter.drawLine(clipper_vertices[i - 1], clipper_vertices[i]);
 	if (closed)
@@ -267,8 +279,8 @@ int MainWindow::checkClipper()
 	int curr_direction = 0;
 
 	for (int i = 1; i < clipper_vertices.size() && f; ++i) {
-		prev_vertex = clipper_vertices[(i - 1) % clipper_vertices.size()];
-		curr_vertex = clipper_vertices[ i      % clipper_vertices.size()];
+		prev_vertex = curr_vertex;
+		curr_vertex = next_vertex;
 		next_vertex = clipper_vertices[(i + 1) % clipper_vertices.size()];
 
 		curr_direction = direction(prev_vertex, curr_vertex, next_vertex);
@@ -282,17 +294,6 @@ int MainWindow::checkClipper()
 	return f * curr_direction;
 }
 
-QVector<QLine> verticesToEdges(const QVector<QPoint>& vertices)
-{
-	QVector<QLine> edges;
-
-	for (int i = 1; i < vertices.size(); ++i)
-		edges.push_back(QLine(vertices[i - 1], vertices[i]));
-	edges.push_back(QLine(vertices.back(), vertices.front()));
-
-	return edges;
-}
-
 double dotProduct(const QPointF &a, const QPointF &b)
 {
 	return a.x() * b.x() + a.y() * b.y();
@@ -303,24 +304,19 @@ QPointF perpendicular(const QPointF &point)
 	return {-point.y(), point.x()};
 }
 
-void MainWindow::clipLine(const QLine &line, int direction, QPainter &painter) {
-	QPoint p1 = line.p1();
-	QPoint p2 = line.p2();
-
-	QPoint d(p2.x() - p1.x(), p2.y() - p1.y());
+void MainWindow::clipLine(const QLine &line, int direction, const QVector<QLine> &edges, QPainter &painter) {
+	QPoint d = line.p2() - line.p1();
 	float tb = 0;
-	float tu = 1;
+	float te = 1;
 
-	auto edges = verticesToEdges(clipper_vertices);
-
-	for (int i = 0; i < edges.size(); ++i) {
-		QPoint w = p1 - edges[i].p1();
-		QPointF n = perpendicular(direction * (edges[i].p2() - edges[i].p1()));
+	for (const auto& edge: edges) {
+		QPoint w = line.p1() - edge.p1();
+		QPointF n = perpendicular(direction * (edge.p2() - edge.p1()));
 
 		auto d_scalar = dotProduct(d, n);
 		auto w_scalar = dotProduct(w, n);
 
-		if (d_scalar == 0.0) {
+		if (d_scalar == 0.0) { // (p2 == p1)  or  (D || n)
 			if (w_scalar < 0)
 				return; // line is invisible
 		} else {
@@ -332,15 +328,11 @@ void MainWindow::clipLine(const QLine &line, int direction, QPainter &painter) {
 			} else {
 				if (t < 0)
 					return;
-				tu = qMin(tu, t);
+				te = qMin(te, t);
 			}
 		}
 	}
 
-	if (tb <= tu)
-		painter.drawLine(
-			qRound(p1.x() + (p2.x() - p1.x()) * tu),
-			qRound(p1.y() + (p2.y() - p1.y()) * tu),
-			qRound(p1.x() + (p2.x() - p1.x()) * tb),
-			qRound(p1.y() + (p2.y() - p1.y()) * tb));
+	if (tb <= te)
+		painter.drawLine(line.p1() + d * te, line.p1() + d * tb);
 }
