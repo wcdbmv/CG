@@ -338,8 +338,7 @@ QVector<QPoint> MainWindow::clipPolygon(int direction)
 				result.push_back(intersection(start, polygon[j], clipper[i], clipper[i + 1]));
 
 			start = polygon[j];
-			int is_visible = isVisible(start, clipper[i], clipper[i + 1]);
-			if ((is_visible > 0 && direction == -1) || (is_visible < 0 && direction == 1))
+			if (isVisible(start, clipper[i], clipper[i + 1]) * direction < 0)
 				result.push_back(start);
 		}
 
@@ -357,10 +356,7 @@ QVector<QPoint> MainWindow::clipPolygon(int direction)
 
 bool MainWindow::checkIntersection(const QPoint &sp, const QPoint &ep, const QPoint &p0, const QPoint &p1)
 {
-	int is_sp_visible = isVisible(sp, p0, p1);
-	int is_ep_visible = isVisible(ep, p0, p1);
-
-	return is_sp_visible * is_ep_visible < 0;
+	return isVisible(sp, p0, p1) * isVisible(ep, p0, p1) <= 0;
 }
 
 int MainWindow::isVisible(const QPoint &p, const QPoint &p1, const QPoint &p2)
