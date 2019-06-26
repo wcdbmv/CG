@@ -157,11 +157,12 @@ void MainWindow::on_selectBgColorPushButton_clicked()
 
 void MainWindow::on_clearAllPushButton_clicked()
 {
+	plotted = false;
+
 	setColor(ui->fgColorLabel, fgColor, DEFAULT_FG_COLOR);
 	setColor(ui->bgColorLabel, bgColor, DEFAULT_BG_COLOR);
 
 	clearImage();
-	plotted = false;
 
 	factor = DEFAULT_ZOOM;
 //	checkMaxZoom();

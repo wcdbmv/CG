@@ -1,6 +1,8 @@
 #include "algorithm.h"
 
+#include <algorithm>
 #include <cmath>
+#include <QVector3D>
 
 template <typename T>
 constexpr T sgn(T value) {
@@ -96,7 +98,7 @@ void rotate(double &x, double &y, double phi)
 	y = __c * __y + __s * __x;
 }
 
-void transform(int &tx, int &ty, double x, double y, double z, double phi_x, double phi_y, double phi_z, int zoom)
+double transform(int &tx, int &ty, double x, double y, double z, double phi_x, double phi_y, double phi_z, int zoom)
 {
 	const auto xc = 360;
 	const auto yc = 360;
@@ -107,10 +109,35 @@ void transform(int &tx, int &ty, double x, double y, double z, double phi_x, dou
 
 	tx = qRound(x * zoom + xc);
 	ty = qRound(y * zoom + yc);
+
+	return z;
+}
+
+QVector<QVector<QVector3D>> dots(const Function &function, const FunctionData &data, int zoom) {
+	QVector<QVector<QVector3D>> result;
+
+	for (auto z = data.ze; z >= data.zb; z -= data.dz) {
+		QVector<QVector3D> line;
+		for (double x = data.xb; x <= data.xe; x += data.dx) {
+			const double y = function(x, z);
+
+			int xt, yt;
+			double zt = transform(xt, yt, x, y, z, data.phi_x, data.phi_y, data.phi_z, zoom);
+			line.push_back(QVector3D(xt, yt, zt));
+		}
+		result.push_back(line);
+	}
+
+	if (result.front().front().z() < result.back().front().z())
+		std::reverse(result.begin(), result.end());
+
+	return result;
 }
 
 void floatingColumnAlgorithm(QPainter &painter, const Function &function, const FunctionData &data, int zoom)
 {
+	const auto surface = dots(function, data, zoom);
+
 	QVector<int> top(720, 0);
 	QVector<int> down(720, 720);
 
@@ -118,19 +145,17 @@ void floatingColumnAlgorithm(QPainter &painter, const Function &function, const 
 	int xr = -1;
 	int yl = -1;
 	int yr = -1;
-	int xp, yp;
 
-	for (auto z = data.ze; z >= data.zb; z -= data.dz) {
-		auto y = function(data.xb, z);
-		transform(xp, yp, data.xb, y, z, data.phi_x, data.phi_y, data.phi_z, zoom);
+	for (int i = 0; i < surface.size(); ++i) {
+		int xp = surface[i][0].x();
+		int yp = surface[i][0].y();
 		processEdge(painter, xp, yp, xl, yl, top, down);
 		auto pflag = visible(xp, yp, top, down);
 
-		for (auto x = data.xb; x <= data.xe; x += data.dx) {
-			int xc = 0, yc = 0;
+		for (int j = 0; j < surface[i].size(); ++j) {
+			int xc = surface[i][j].x();
+			int yc = surface[i][j].y();
 			int xi, yi;
-			y = function(x, z);
-			transform(xc, yc, x, y, z, data.phi_x, data.phi_y, data.phi_z, zoom);
 			auto tflag = visible(xc, yc, top, down);
 
 			if (tflag == pflag) {
